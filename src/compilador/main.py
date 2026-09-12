@@ -1,5 +1,10 @@
+from compilador.lex import tokenize
+
+
 def main():
-    print("Olá mundo")
+    tokens = tokenize("package Teste")
+    for token in tokens:
+        print(token)
 
 
 if __name__ == "__main__":
