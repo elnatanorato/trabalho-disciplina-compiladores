@@ -117,11 +117,32 @@ t_AT = r"@"
 t_COLON = r":"
 t_MINUS_MINUS = r"--"
 
+errors_list = []
+
+def find_column(input_str, token):
+    line_start = input_str.rfind("\n", 0, token.lexpos) + 1
+    return (token.lexpos - line_start) + 1
+
+
+def t_ID_TYPE(t):
+    r"[A-Za-z]+DataType"
+    return t
+
+def t_ID_INSTANCE(t):
+    r"[A-Za-z][A-Za-z_]*[0-9]+"
+    return t
+
+def t_ID_INSTANCE(t):
+    r"[A-Za-z][A-Za-z_]*[0-9]+"
+    return t
+
+def t_ID_TYPE(t):
+    r"[A-Za-z]+(Type)"
+    return t
 
 def t_ID_CLASS(t):
     r"[A-Z][A-Za-z_]*"
     return t
-
 
 def t_ID_RELATION(t):
     r"functional-complexes | [a-z][A-Za-z_]*"
@@ -132,17 +153,6 @@ def t_ID_RELATION(t):
         t.type = reserved.get(t.value, "ID_RELATION")
 
     return t
-
-
-def t_ID_INSTANCE(t):
-    r"[A-Za-z][A-Za-z_]*[0-9]+"
-    return t
-
-
-def t_ID_TYPE(t):
-    r"[A-Za-z]+(Type)"
-    return t
-
 
 def t_NUMBER(t):
     r"[0-9]+"
@@ -168,14 +178,12 @@ def t_error(t):
 
 
 def t_newline(t):
-    r"(?:\r\n|\r|\n)+"
-    normalized_newlines = t.value.replace("\r\n", "\n").replace("\r", "\n")
-    t.lexer.lineno += len(normalized_newlines)
+    r"\n+"
+    t.lexer.lineno += len(t.value)
 
 
 t_ignore = " \t"
 t_ignore_COMMENT = r"//.*"
-
 
 def find_column(source, token):
     last_newline = max(
@@ -208,7 +216,6 @@ def analyze(source):
         "tokens": recognized_tokens,
         "errors": list(lexer.errors),
     }
-
 
 def tokenize(source):
     return analyze(source)["tokens"]

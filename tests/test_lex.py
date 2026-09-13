@@ -159,6 +159,34 @@ class TokenizePositionTests(unittest.TestCase):
             self.assertTrue(error["message"])
             self.assertTrue(error["suggestion"])
 
+    def test_recognizes_adjacent_composite_symbols(self):
+        analysis = analyze("[1..*]<>----<>")
+
+        result = [
+            (token.type, token.value, token.lineno, token.column)
+            for token in analysis["tokens"]
+        ]
+
+        expected = [
+            ("L_BRACKET", "[", 1, 1),
+            ("NUMBER", 1, 1, 2),
+            ("DOT_DOT", "..", 1, 3),
+            ("STAR", "*", 1, 5),
+            ("R_BRACKET", "]", 1, 6),
+            ("L_AGGREGATION", "<>--", 1, 7),
+            ("R_AGGREGATION", "--<>", 1, 11),
+        ]
+
+        self.assertEqual(result, expected)
+        self.assertEqual(analysis["errors"], [])
+
+    def test_clears_errors_between_analyses(self):
+        first_analysis = analyze("$")
+        second_analysis = analyze("kind")
+
+        self.assertEqual(len(first_analysis["errors"]), 1)
+        self.assertEqual(second_analysis["errors"], [])
+
 
 if __name__ == "__main__":
     unittest.main()
