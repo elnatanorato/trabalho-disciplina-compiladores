@@ -158,7 +158,7 @@ def t_error(t):
 
 
 def t_newline(t):
-    r"\n+"
+    r"(?:\r\n|\r|\n)+"
     t.lexer.lineno += len(t.value)
 
 
@@ -167,8 +167,11 @@ t_ignore_COMMENT = r"//.*"
 
 
 def find_column(source, token):
-    line_start = source.rfind("\n", 0, token.lexpos) + 1
-    return (token.lexpos - line_start) + 1
+    last_newline = max(
+        source.rfind("\n", 0, token.lexpos),
+        source.rfind("\r", 0, token.lexpos),
+    )    
+    return token.lexpos - last_newline
 
 
 lexer = lex.lex()

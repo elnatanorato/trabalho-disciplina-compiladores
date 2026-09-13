@@ -43,5 +43,25 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_handles_empty_lines_tabs_and_different_line_endings(self):
+        source = "kind Person {\r\r\tname : string\r}"
+
+        result = [
+            (token.type, token.value, token.lineno, token.column)
+            for token in tokenize(source)
+        ]
+
+        expected = [
+            ("KIND", "kind", 1, 1),
+            ("ID_CLASS", "Person", 1, 6),
+            ("L_BRACE", "{", 1, 13),
+            ("ID_RELATION", "name", 3, 2),
+            ("COLON", ":", 3, 7),
+            ("STRING_TYPE", "string", 3, 9),
+            ("R_BRACE", "}", 4, 1),
+        ]
+
+        self.assertEqual(result, expected)
+
 if __name__ == "__main__":
     unittest.main()
