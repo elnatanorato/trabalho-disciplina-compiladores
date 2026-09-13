@@ -166,22 +166,25 @@ t_ignore = " \t"
 t_ignore_COMMENT = r"//.*"
 
 
-def find_column(input, token):
-    line_start = input.rfind("\n", 0, token.lexpos) + 1
+def find_column(source, token):
+    line_start = source.rfind("\n", 0, token.lexpos) + 1
     return (token.lexpos - line_start) + 1
 
 
 lexer = lex.lex()
 
 
-def tokenize(input):
-    lexer.input(input)
+def tokenize(source):
+    lexer.lineno = 1
+    lexer.input(source)
 
     tokens = []
     while True:
         token = lexer.token()
         if token is None:
             break
+
+        token.column = find_column(source, token)
         tokens.append(token)
 
     return tokens
