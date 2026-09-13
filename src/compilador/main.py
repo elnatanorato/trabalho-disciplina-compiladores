@@ -1,12 +1,12 @@
-import sys
-from compilador.lex import tokenize, find_column, reserved, relation
+from compilador.lex import analyze, reserved
 
 META_ATRIBUTOS = {"ORDERED_META", "CONST_META", "DERIVED_META", "SUBSETS_META", "REDEFINES_META"}
 PALAVRAS_RESERVADAS = set(reserved.values()) - META_ATRIBUTOS
 
 def gerar_relatorio(codigo_fonte):
-    tokens, erros = tokenize(codigo_fonte)
-
+    analysis = analyze(codigo_fonte)
+    tokens = analysis["tokens"]
+    erros = analysis["errors"]
 
     print("\n" + "="*70)
     print(" VISÃO ANALÍTICA DOS TOKENS ".center(70))
@@ -15,8 +15,10 @@ def gerar_relatorio(codigo_fonte):
     print("-" * 70)
     
     for t in tokens:
-        col = find_column(codigo_fonte, t)
-        print(f"{t.type:<25} | {str(t.value):<20} | {t.lineno:<6} | {col}")
+        print(
+            f"{t.type:<25} | {str(t.value):<20} | "
+            f"{t.lineno:<6} | {t.column}"
+        )
 
     contadores = {
         "Classes": 0,

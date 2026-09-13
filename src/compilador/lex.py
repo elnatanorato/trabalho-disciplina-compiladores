@@ -30,7 +30,7 @@ reserved = {
     "where": "WHERE",
     "package": "PACKAGE",
     "import": "IMPORT",
-    #  "functional-complexes": "FUNCITIONAL_COMPLEXES" Sua regra fica em outro lugar
+    "functional-complexes": "FUNCTIONAL_COMPLEXES",
     # Tipos
     "number": "NUMBER_TYPE",
     "string": "STRING_TYPE",
@@ -48,31 +48,31 @@ reserved = {
 }
 
 relation = (
-    "@material",
-    "@derivation",
-    "@comparative",
-    "@mediation",
-    "@characterization",
-    "@externalDependence",
-    "@componentOf",
-    "@memberOf",
-    "@subCollectionOf",
-    "@subQualityOf",
-    "@instantiation",
-    "@termination",
-    "@participational",
-    "@participation",
-    "@historicalDependence",
-    "@creation",
-    "@manifestation",
-    "@bringsAbout",
-    "@triggers",
-    "@composition",
-    "@aggregation",
-    "@inherence",
-    "@value",
-    "@formal",
-    "@constitution",
+    "material",
+    "derivation",
+    "comparative",
+    "mediation",
+    "characterization",
+    "externalDependence",
+    "componentOf",
+    "memberOf",
+    "subCollectionOf",
+    "subQualityOf",
+    "instantiation",
+    "termination",
+    "participational",
+    "participation",
+    "historicalDependence",
+    "creation",
+    "manifestation",
+    "bringsAbout",
+    "triggers",
+    "composition",
+    "aggregation",
+    "inherence",
+    "value",
+    "formal",
+    "constitution",
 )
 
 tokens = [
@@ -88,7 +88,7 @@ tokens = [
     "L_AGGREGATION",
     "R_AGGREGATION",
     "STAR",
-    #  'AT', Não é necessario (t_RELATION já considera esse simbolo)
+    "AT",  # O PDF define "@" separadamente dos estereótipos de relação.
     "COLON",
     "MINUS_MINUS",
     # Nomes
@@ -113,85 +113,103 @@ t_DOT_DOT = r"\.\."
 t_L_AGGREGATION = "<>--"
 t_R_AGGREGATION = "--<>"
 t_STAR = r"\*"
-# t_AT = r'@'
+t_AT = r"@"
 t_COLON = r":"
 t_MINUS_MINUS = r"--"
 
-errors_list = []
-
-def find_column(input_str, token):
-    line_start = input_str.rfind("\n", 0, token.lexpos) + 1
-    return (token.lexpos - line_start) + 1
+def t_ID_INSTANCE(t):
+    r"[A-Za-z][A-Za-z_]*[0-9]+"
+    return t
 
 
 def t_ID_TYPE(t):
     r"[A-Za-z]+DataType"
     return t
 
-def t_ID_INSTANCE(t):
-    r"[A-Za-z][A-Za-z_]*[0-9]+"
-    return t
 
 def t_ID_CLASS(t):
     r"[A-Z][A-Za-z_]*"
     return t
 
-def t_ID_RELATION(t):
-    r"[a-z][A-Za-z_]*|functional-complexes"
-    t.type = reserved.get(t.value, "ID_RELATION")
-    return t
 
-def t_RELATION(t):
-    r"@[A-Za-z]*"
+def t_ID_RELATION(t):
+    r"functional-complexes|[a-z][A-Za-z_]*"
+
     if t.value in relation:
-        return t
-    
-    col = find_column(t.lexer.lexdata, t)
-    errors_list.append({
-        "line": t.lexer.lineno,
-        "column": col,
-        "char": t.value,
-        "message": f"Anotação '{t.value}' desconhecida.",
-        "suggestion": "Verifique a grafia."
-    })
-    t.lexer.skip(len(t.value))
+        t.type = "RELATION"
+    else:
+        t.type = reserved.get(t.value, "ID_RELATION")
+
+    return t
 
 def t_NUMBER(t):
     r"[0-9]+"
+    t.lexeme = t.value
     t.value = int(t.value)
     return t
 
+def t_error(t):
+    invalid_character = t.value[0]
+
+    error = {
+        "lexeme": invalid_character,
+        "line": t.lineno,
+        "column": find_column(t.lexer.lexdata, t),
+        "message": f"Caractere '{invalid_character}' não reconhecido.",
+        "suggestion": (
+            "Remova o caractere ou substitua-o por um símbolo válido da TONTO."
+        ),
+    }
+
+    t.lexer.errors.append(error)
+    t.lexer.skip(1)
+
+
 def t_newline(t):
-    r"\n+"
-    t.lexer.lineno += len(t.value)
+    r"(?:\r\n|\r|\n)+"
+    normalized_newlines = t.value.replace("\r\n", "\n").replace("\r", "\n")
+    t.lexer.lineno += len(normalized_newlines)
+
 
 t_ignore = " \t"
 t_ignore_COMMENT = r"//.*"
 
-def t_error(t):
-    col = find_column(t.lexer.lexdata, t)
-    errors_list.append({
-        "line": t.lexer.lineno,
-        "column": col,
-        "char": t.value[0],
-        "message": f"Caractere '{t.value[0]}' inválido ou não reconhecido.",
-        "suggestion": "Verifique se o caractere pertence à sintaxe."
-    })
-    t.lexer.skip(1)
+
+def find_column(source, token):
+    last_newline = max(
+        source.rfind("\n", 0, token.lexpos),
+        source.rfind("\r", 0, token.lexpos),
+    )
+    return token.lexpos - last_newline
+
 
 lexer = lex.lex()
 
-def tokenize(input_data):
-    global errors_list
-    errors_list = []  
-    
-    lexer.input(input_data)
-    tokens_list = []
-    
+
+def analyze(source):
+    lexer.lineno = 1
+    lexer.errors = []
+    lexer.input(source)
+
+    recognized_tokens = []
+
     while True:
         token = lexer.token()
+
         if token is None:
             break
-        tokens_list.append(token)
-        
-    return tokens_list, errors_list
+
+        if not hasattr(token, "lexeme"):
+            token.lexeme = token.value
+
+        token.column = find_column(source, token)
+        recognized_tokens.append(token)
+
+    return {
+        "tokens": recognized_tokens,
+        "errors": list(lexer.errors),
+    }
+
+
+def tokenize(source):
+    return analyze(source)["tokens"]
