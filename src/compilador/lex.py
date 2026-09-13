@@ -157,7 +157,8 @@ def t_error(t):
 
 def t_newline(t):
     r"(?:\r\n|\r|\n)+"
-    t.lexer.lineno += len(t.value)
+    normalized_newlines = t.value.replace("\r\n", "\n").replace("\r", "\n")
+    t.lexer.lineno += len(normalized_newlines)
 
 
 t_ignore = " \t"

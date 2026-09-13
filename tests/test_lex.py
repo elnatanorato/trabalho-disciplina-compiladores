@@ -102,6 +102,26 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_counts_crlf_as_single_line_break(self):
+        source = "kind Person {\r\n    name : string\r\n}"
+
+        result = [
+            (token.type, token.value, token.lineno, token.column)
+            for token in tokenize(source)
+        ]
+
+        expected = [
+            ("KIND", "kind", 1, 1),
+            ("ID_CLASS", "Person", 1, 6),
+            ("L_BRACE", "{", 1, 13),
+            ("ID_RELATION", "name", 2, 5),
+            ("COLON", ":", 2, 10),
+            ("STRING_TYPE", "string", 2, 12),
+            ("R_BRACE", "}", 3, 1),
+        ]
+
+        self.assertEqual(result, expected)
+
 
 if __name__ == "__main__":
     unittest.main()
