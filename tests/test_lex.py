@@ -187,6 +187,22 @@ class TokenizePositionTests(unittest.TestCase):
         self.assertEqual(len(first_analysis["errors"]), 1)
         self.assertEqual(second_analysis["errors"], [])
 
+    def test_preserves_original_lexeme(self):
+        analysis = analyze("[03]")
+
+        result = [
+            (token.type, token.value, token.lexeme)
+            for token in analysis["tokens"]
+        ]
+
+        expected = [
+            ("L_BRACKET", "[", "["),
+            ("NUMBER", 3, "03"),
+            ("R_BRACKET", "]", "]"),
+        ]
+
+        self.assertEqual(result, expected)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -144,9 +144,9 @@ def t_ID_RELATION(t):
 
 def t_NUMBER(t):
     r"[0-9]+"
+    t.lexeme = t.value
     t.value = int(t.value)
     return t
-
 
 def t_error(t):
     invalid_character = t.value[0]
@@ -198,6 +198,9 @@ def analyze(source):
 
         if token is None:
             break
+
+        if not hasattr(token, "lexeme"):
+            token.lexeme = token.value
 
         token.column = find_column(source, token)
         recognized_tokens.append(token)
