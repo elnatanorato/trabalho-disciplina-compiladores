@@ -1,6 +1,6 @@
 import unittest
 
-from compilador.lex import tokenize
+from compilador.lex import analyze, tokenize
 
 
 class TokenizePositionTests(unittest.TestCase):
@@ -121,6 +121,43 @@ class TokenizePositionTests(unittest.TestCase):
         ]
 
         self.assertEqual(result, expected)
+
+    def test_collects_multiple_errors_and_continues_analysis(self):
+        source = "kind Person $ {\n    ? name : string\n}"
+
+        analysis = analyze(source)
+
+        token_types = [
+            token.type
+            for token in analysis["tokens"]
+        ]
+
+        error_positions = [
+            (error["lexeme"], error["line"], error["column"])
+            for error in analysis["errors"]
+        ]
+
+        expected_token_types = [
+            "KIND",
+            "ID_CLASS",
+            "L_BRACE",
+            "ID_RELATION",
+            "COLON",
+            "STRING_TYPE",
+            "R_BRACE",
+        ]
+
+        expected_error_positions = [
+            ("$", 1, 13),
+            ("?", 2, 5),
+        ]
+
+        self.assertEqual(token_types, expected_token_types)
+        self.assertEqual(error_positions, expected_error_positions)
+
+        for error in analysis["errors"]:
+            self.assertTrue(error["message"])
+            self.assertTrue(error["suggestion"])
 
 
 if __name__ == "__main__":

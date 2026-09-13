@@ -151,7 +151,19 @@ def t_NUMBER(t):
 
 
 def t_error(t):
-    print(f"Error: Caractere {t.value[0]} é invalido")
+    invalid_character = t.value[0]
+
+    error = {
+        "lexeme": invalid_character,
+        "line": t.lineno,
+        "column": find_column(t.lexer.lexdata, t),
+        "message": f"Caractere '{invalid_character}' não reconhecido.",
+        "suggestion": (
+            "Remova o caractere ou substitua-o por um símbolo válido da TONTO."
+        ),
+    }
+
+    t.lexer.errors.append(error)
     t.lexer.skip(1)
 
 
@@ -176,17 +188,27 @@ def find_column(source, token):
 lexer = lex.lex()
 
 
-def tokenize(source):
+def analyze(source):
     lexer.lineno = 1
+    lexer.errors = []
     lexer.input(source)
 
-    tokens = []
+    recognized_tokens = []
+
     while True:
         token = lexer.token()
+
         if token is None:
             break
 
         token.column = find_column(source, token)
-        tokens.append(token)
+        recognized_tokens.append(token)
 
-    return tokens
+    return {
+        "tokens": recognized_tokens,
+        "errors": list(lexer.errors),
+    }
+
+
+def tokenize(source):
+    return analyze(source)["tokens"]
