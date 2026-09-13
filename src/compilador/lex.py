@@ -152,8 +152,19 @@ def t_NUMBER(t):
     return t
 
 
+errors_list = []
+
 def t_error(t):
-    print(f"Error: Caractere {t.value[0]} é invalido")
+
+    col = find_column(t.lexer.lexdata, t)
+
+    errors_list.append({
+        "line": t.lexer.lineno,
+        "column": col,
+        "char": t.value[0],
+        "message": f"Caractere '{t.value[0]}' é inválido",
+        "suggestion": "Verifique se o caractere pertence à sintaxe"
+    })
     t.lexer.skip(1)
 
 
@@ -174,8 +185,11 @@ def find_column(input, token):
 lexer = lex.lex()
 
 
-def tokenize(input):
-    lexer.input(input)
+def tokenize(input_data):
+    global errors_list
+    erros_list = []
+
+    lexer.input(input_data)
 
     tokens = []
     while True:
@@ -184,4 +198,4 @@ def tokenize(input):
             break
         tokens.append(token)
 
-    return tokens
+    return tokens, erros_list
