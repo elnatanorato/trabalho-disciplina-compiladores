@@ -48,31 +48,31 @@ reserved = {
 }
 
 relation = (
-    "@material",
-    "@derivation",
-    "@comparative",
-    "@mediation",
-    "@characterization",
-    "@externalDependence",
-    "@componentOf",
-    "@memberOf",
-    "@subCollectionOf",
-    "@subQualityOf",
-    "@instantiation",
-    "@termination",
-    "@participational",
-    "@participation",
-    "@historicalDependence",
-    "@creation",
-    "@manifestation",
-    "@bringsAbout",
-    "@triggers",
-    "@composition",
-    "@aggregation",
-    "@inherence",
-    "@value",
-    "@formal",
-    "@constitution",
+    "material",
+    "derivation",
+    "comparative",
+    "mediation",
+    "characterization",
+    "externalDependence",
+    "componentOf",
+    "memberOf",
+    "subCollectionOf",
+    "subQualityOf",
+    "instantiation",
+    "termination",
+    "participational",
+    "participation",
+    "historicalDependence",
+    "creation",
+    "manifestation",
+    "bringsAbout",
+    "triggers",
+    "composition",
+    "aggregation",
+    "inherence",
+    "value",
+    "formal",
+    "constitution",
 )
 
 tokens = [
@@ -88,7 +88,7 @@ tokens = [
     "L_AGGREGATION",
     "R_AGGREGATION",
     "STAR",
-    #  'AT', Não é necessario (t_RELATION já considera esse simbolo)
+    "AT", # O PDF define "@" separadamente dos estereótipos de relação.
     "COLON",
     "MINUS_MINUS",
     # Nomes
@@ -113,7 +113,7 @@ t_DOT_DOT = r"\.\."
 t_L_AGGREGATION = "<>--"
 t_R_AGGREGATION = "--<>"
 t_STAR = r"\*"
-# t_AT = r'@'
+t_AT = r"@"
 t_COLON = r":"
 t_MINUS_MINUS = r"--"
 
@@ -125,20 +125,18 @@ def t_ID_CLASS(t):
 
 def t_ID_RELATION(t):
     r"functional-complexes | [a-z][A-Za-z_]*"
-    t.type = reserved.get(t.value, "ID_RELATION")
+
+    if t.value in relation:
+        t.type = "RELATION"
+    else:
+        t.type = reserved.get(t.value, "ID_RELATION")
+
     return t
 
 
 def t_ID_INSTANCE(t):
     r"[A-Za-z][A-Za-z_]*[0-9]+"
     return t
-
-
-def t_RELATION(t):
-    r"@[A-Za-z]*"
-    if t.value in relation:
-        return t
-    print(f"Error: Anotação {t.value} desconhecida")
 
 
 def t_ID_TYPE(t):

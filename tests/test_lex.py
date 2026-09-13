@@ -2,6 +2,7 @@ import unittest
 
 from compilador.lex import tokenize
 
+
 class TokenizePositionTests(unittest.TestCase):
     def test_tokenizes_basic_example_with_line_and_column(self):
         source = "kind Person {\n    name : string\n}"
@@ -62,6 +63,45 @@ class TokenizePositionTests(unittest.TestCase):
         ]
 
         self.assertEqual(result, expected)
+
+    def test_recognizes_simple_and_composite_symbols(self):
+        source = "{ } ( ) [ ] .. <>-- --<> * @ :"
+
+        result = [
+            (token.type, token.value, token.lineno, token.column)
+            for token in tokenize(source)
+        ]
+
+        expected = [
+            ("L_BRACE", "{", 1, 1),
+            ("R_BRACE", "}", 1, 3),
+            ("L_PAREN", "(", 1, 5),
+            ("R_PAREN", ")", 1, 7),
+            ("L_BRACKET", "[", 1, 9),
+            ("R_BRACKET", "]", 1, 11),
+            ("DOT_DOT", "..", 1, 13),
+            ("L_AGGREGATION", "<>--", 1, 16),
+            ("R_AGGREGATION", "--<>", 1, 21),
+            ("STAR", "*", 1, 26),
+            ("AT", "@", 1, 28),
+            ("COLON", ":", 1, 30),
+        ]
+
+        self.assertEqual(result, expected)
+
+    def test_separates_at_sign_from_relation_stereotype(self):
+        result = [
+            (token.type, token.value, token.lineno, token.column)
+            for token in tokenize("@material")
+        ]
+
+        expected = [
+            ("AT", "@", 1, 1),
+            ("RELATION", "material", 1, 2),
+        ]
+
+        self.assertEqual(result, expected)
+
 
 if __name__ == "__main__":
     unittest.main()
