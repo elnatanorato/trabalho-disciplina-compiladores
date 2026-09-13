@@ -30,7 +30,7 @@ reserved = {
     "where": "WHERE",
     "package": "PACKAGE",
     "import": "IMPORT",
-    #  "functional-complexes": "FUNCITIONAL_COMPLEXES" Sua regra fica em outro lugar
+    "functional-complexes": "FUNCTIONAL_COMPLEXES",
     # Tipos
     "number": "NUMBER_TYPE",
     "string": "STRING_TYPE",
@@ -133,7 +133,7 @@ def t_ID_CLASS(t):
 
 
 def t_ID_RELATION(t):
-    r"functional-complexes | [a-z][A-Za-z_]*"
+    r"functional-complexes|[a-z][A-Za-z_]*"
 
     if t.value in relation:
         t.type = "RELATION"
