@@ -1,24 +1,29 @@
 from compilador.lex import analyze, reserved
+import sys
 
-META_ATRIBUTOS = {"ORDERED_META", "CONST_META", "DERIVED_META", "SUBSETS_META", "REDEFINES_META"}
+META_ATRIBUTOS = {
+    "ORDERED_META",
+    "CONST_META",
+    "DERIVED_META",
+    "SUBSETS_META",
+    "REDEFINES_META",
+}
 PALAVRAS_RESERVADAS = set(reserved.values()) - META_ATRIBUTOS
+
 
 def gerar_relatorio(codigo_fonte):
     analysis = analyze(codigo_fonte)
     tokens = analysis["tokens"]
     erros = analysis["errors"]
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(" VISÃO ANALÍTICA DOS TOKENS ".center(70))
-    print("="*70)
+    print("=" * 70)
     print(f"{'Token':<25} | {'Lexema':<20} | {'Linha':<6} | {'Coluna'}")
     print("-" * 70)
-    
+
     for t in tokens:
-        print(
-            f"{t.type:<25} | {str(t.value):<20} | "
-            f"{t.lineno:<6} | {t.column}"
-        )
+        print(f"{t.type:<25} | {str(t.value):<20} | " f"{t.lineno:<6} | {t.column}")
 
     contadores = {
         "Classes": 0,
@@ -26,7 +31,7 @@ def gerar_relatorio(codigo_fonte):
         "Palavras-chave / Estereótipos": 0,
         "Indivíduos (Instâncias)": 0,
         "Meta-atributos": 0,
-        "Outros (Símbolos, Números, Tipos)": 0
+        "Outros (Símbolos, Números, Tipos)": 0,
     }
 
     for t in tokens:
@@ -43,41 +48,44 @@ def gerar_relatorio(codigo_fonte):
         else:
             contadores["Outros (Símbolos, Números, Tipos)"] += 1
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(" TABELA DE SÍNTESE ".center(70))
-    print("="*70)
+    print("=" * 70)
     for categoria, quantidade in contadores.items():
         print(f"{categoria:<40} : {quantidade}")
 
-    
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(" RELATÓRIO DE ERROS ".center(70))
-    print("="*70)
-    
+    print("=" * 70)
+
     if not erros:
         print("-> Nenhum erro léxico foi encontrado no código fonte analisado.")
     else:
         for err in erros:
-            print(f"[Erro Léxico] Linha {err['line']}, Coluna {err['column']}: {err['message']}")
+            print(
+                f"[Erro Léxico] Linha {err['line']}, Coluna {err['column']}: {err['message']}"
+            )
             print(f"   ↳ Sugestão de Tratamento: {err['suggestion']}\n")
 
+
 def main():
-    codigo_teste = """
-    package TesteOntologia
-    
-    category Pessoa
-    kind Estudante subsets Pessoa
-    
-    Estudante123
-    
-    // Testando relações e meta atributos
-    @material
-    ordered const
-    
-    # erro_aqui
-    """
-    
-    gerar_relatorio(codigo_teste)
+    if len(sys.argv) != 2:
+        print(f"Argumento invalido! Esperado {sys.argv[0]} {{input.tonto}}")
+        return
+
+    file = sys.argv[1]
+
+    try:
+        with open(file) as f:
+            codigo = f.read()
+    except FileNotFoundError:
+        print(f"Arquivo {file} não existe")
+        return
+    except:
+        print(f"Problemas ao abrir arquivo {file}")
+
+    gerar_relatorio(codigo)
+
 
 if __name__ == "__main__":
     main()

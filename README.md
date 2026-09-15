@@ -3,7 +3,7 @@
 Para executar:
 ```
 poetry install
-poetry run compilador
+poetry run compilador {input.tonto}
 ```
 
 Para executar os testes:
