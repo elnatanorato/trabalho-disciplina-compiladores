@@ -8,15 +8,10 @@ class TokenizePositionTests(unittest.TestCase):
         source = "kind Person {\n    name : string\n}"
 
         result = [
-            (
-                token.type,
-                token.value,
-                token.lineno,
-                getattr(token, "column", None)
-            )
+            (token.type, token.value, token.lineno, getattr(token, "column", None))
             for token in tokenize(source)
         ]
-        
+
         expected = [
             ("KIND", "kind", 1, 1),
             ("ID_CLASS", "Person", 1, 6),
@@ -28,7 +23,7 @@ class TokenizePositionTests(unittest.TestCase):
         ]
 
         self.assertEqual(result, expected)
-    
+
     def test_resets_line_number_between_analyses(self):
         tokenize("kind Person {\n}\n")
 
@@ -127,10 +122,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         analysis = analyze(source)
 
-        token_types = [
-            token.type
-            for token in analysis["tokens"]
-        ]
+        token_types = [token.type for token in analysis["tokens"]]
 
         error_positions = [
             (error["lexeme"], error["line"], error["column"])
@@ -191,14 +183,28 @@ class TokenizePositionTests(unittest.TestCase):
         analysis = analyze("[03]")
 
         result = [
-            (token.type, token.value, token.lexeme)
-            for token in analysis["tokens"]
+            (token.type, token.value, token.lexeme) for token in analysis["tokens"]
         ]
 
         expected = [
             ("L_BRACKET", "[", "["),
             ("NUMBER", 3, "03"),
             ("R_BRACKET", "]", "]"),
+        ]
+
+        self.assertEqual(result, expected)
+
+    def test_ignore_comment(self):
+        analysis = analyze("// comment package\ncomment // package\ncomment package //")
+
+        result = [
+            (token.type, token.value, token.lineno) for token in analysis["tokens"]
+        ]
+
+        expected = [
+            ("ID_RELATION", "comment", 2),
+            ("ID_RELATION", "comment", 3),
+            ("PACKAGE", "package", 3),
         ]
 
         self.assertEqual(result, expected)

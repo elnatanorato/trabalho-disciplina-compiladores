@@ -13,7 +13,7 @@ packages = [{include = "compilador", from = "src"}]
 
 [tool.poetry.scripts]
 compilador = "compilador.main:main"
-
+test = "tests.runner:test"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
