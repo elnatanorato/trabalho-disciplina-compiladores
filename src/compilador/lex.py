@@ -94,7 +94,6 @@ tokens = [
     "L_AGGREGATION",
     "R_AGGREGATION",
     "STAR",
-    "AT",  # O PDF define "@" separadamente dos estereótipos de relação.
     "COLON",
     "MINUS_MINUS",
     # Nomes
@@ -121,10 +120,30 @@ t_DOT_DOT = r"\.\."
 t_L_AGGREGATION = "<>--"
 t_R_AGGREGATION = "--<>"
 t_STAR = r"\*"
-t_AT = r"@"
 t_COLON = r":"
 t_MINUS_MINUS = r"--"
 
+# Identifica estereótipos de relação: devem começar com '@' e conter
+# um nome presente na lista de relações válidas.
+def t_RELATION(t):
+    r"@[A-Za-z0-9_]*"
+
+    relation_name = t.value[1:]
+
+    if relation_name in relation:
+        return t
+
+    t.lexer.errors.append(
+        {
+            "lexeme": t.value,
+            "line": t.lineno,
+            "column": find_column(t.lexer.lexdata, t),
+            "message": f"Lexema '{t.value}' não reconhecido.",
+            "suggestion": "Utilize um estereótipo de relação válido.",
+        }
+    )
+
+    return None
 
 # Regra para identificar instâncias: devem começar com letra e terminar com número.
 def t_ID_INSTANCE(t):
@@ -133,7 +152,7 @@ def t_ID_INSTANCE(t):
 
 # Regra para identificar tipos de dados: devem terminar com a string DataType.
 def t_ID_TYPE(t):
-    r"[A-Za-z]+DataType"
+    r"[A-Za-z]+DataType(?![A-Za-z0-9_])"
     return t
 
 # Regra para identificar classes: começam obrigatoriamente com letra maiúscula.
@@ -146,11 +165,7 @@ def t_ID_CLASS(t):
 def t_ID_RELATION(t):
     r"functional-complexes|[a-z][A-Za-z_]*"
 
-    if t.value in relation:
-        t.type = "RELATION"
-    else:
-        t.type = reserved.get(t.value, "ID_RELATION")
-
+    t.type = reserved.get(t.value, "ID_RELATION")
     return t
 
 

@@ -1,0 +1,22 @@
+// Exemplo para demonstrar a deteccao e a recuperacao de erros lexicos.
+package ErrorModel
+import CommonTypes
+
+kind Person {
+    name : string
+    document : DocumentDataType
+}
+
+// Erros de estereotipo de relacao.
+@
+@unknown
+@materialA
+
+// Caracteres que nao pertencem a linguagem.
+$
+?
+
+// O analisador deve continuar reconhecendo os tokens depois dos erros.
+kind University
+@material relation Person [1..*] -- studiesAt -- [1] University
+Person01

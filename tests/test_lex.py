@@ -66,7 +66,7 @@ class TokenizePositionTests(unittest.TestCase):
 
     # Testa se todos os símbolos especiais estão sendo capturados e classificados individualmente.
     def test_recognizes_simple_and_composite_symbols(self):
-        source = "{ } ( ) [ ] .. <>-- --<> * @ :"
+        source = "{ } ( ) [ ] .. <>-- --<> * :"
 
         result = [
             (token.type, token.value, token.lineno, token.column)
@@ -84,22 +84,79 @@ class TokenizePositionTests(unittest.TestCase):
             ("L_AGGREGATION", "<>--", 1, 16),
             ("R_AGGREGATION", "--<>", 1, 21),
             ("STAR", "*", 1, 26),
-            ("AT", "@", 1, 28),
-            ("COLON", ":", 1, 30),
+            ("COLON", ":", 1, 28),
         ]
 
         self.assertEqual(result, expected)
 
-    # Confirma o requisito de que o símbolo '@' seja separado da relação
-    def test_separates_at_sign_from_relation_stereotype(self):
+    # Testa se o analisador reconhece estereótipos de relação como um único token.
+    def test_recognizes_relation_stereotype_as_single_token(self):
         result = [
             (token.type, token.value, token.lineno, token.column)
             for token in tokenize("@material")
         ]
 
         expected = [
-            ("AT", "@", 1, 1),
-            ("RELATION", "material", 1, 2),
+            ("RELATION", "@material", 1, 1),
+        ]
+
+        self.assertEqual(result, expected)
+
+    # Testa se o simbolo '@' isolado é reportado como erro
+    def test_reports_isolated_at_sign_as_error(self):
+        analysis = analyze("@")
+
+        self.assertEqual(analysis["tokens"], [])
+
+        result = [
+            (error["lexeme"], error["line"], error["column"])
+            for error in analysis["errors"]
+        ]
+
+        expected = [
+            ("@", 1, 1),
+        ]
+
+        self.assertEqual(result, expected)
+        self.assertTrue(analysis["errors"][0]["message"])
+        self.assertTrue(analysis["errors"][0]["suggestion"])
+
+    # Testa se o analisador reporta estereotipo de relação desconhecido como erro.
+    def test_reports_unknown_relation_stereotype(self):
+        analysis = analyze("@unknown kind Person")
+
+        result = [
+            (token.type, token.value, token.lineno, token.column)
+            for token in analysis["tokens"]
+        ]
+
+        expected = [
+            ("KIND", "kind", 1, 10),
+            ("ID_CLASS", "Person", 1, 15),
+        ]
+
+        self.assertEqual(result, expected)
+
+        errors = analysis["errors"]
+
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0]["lexeme"], "@unknown")
+        self.assertEqual(errors[0]["line"], 1)
+        self.assertEqual(errors[0]["column"], 1)
+
+    # Testa se diferencia lexemas que terminam com DataType dos que possuem DataType no meio do nome.
+    def test_requires_datatype_suffix_at_end_of_identifier(self):
+        source = "AlgoDataType AlgoDataTypeCoisa algoDataTypeCoisa"
+
+        result = [
+            (token.type, token.value)
+            for token in tokenize(source)
+        ]
+
+        expected = [
+            ("ID_TYPE", "AlgoDataType"),
+            ("ID_CLASS", "AlgoDataTypeCoisa"),
+            ("ID_RELATION", "algoDataTypeCoisa"),
         ]
 
         self.assertEqual(result, expected)
