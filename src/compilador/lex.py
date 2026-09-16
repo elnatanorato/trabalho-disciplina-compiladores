@@ -1,6 +1,9 @@
 import ply.lex as lex
 
-reserved = {
+
+# Dicionário contendo as palavras reservadas e estereótipos de classe da linguagem TONTO.
+# Mapeia o texto exato para o nome do token em maiúsculo.
+reserved = {                                        
     # Estereotipos de classes
     "event": "EVENT",
     "situation": "SITUATION",
@@ -47,6 +50,8 @@ reserved = {
     "redefines": "REDEFINES_META",
 }
 
+
+# Tupla com os estereótipos de relação válidos na linguagem TONTO.
 relation = (
     "material",
     "derivation",
@@ -75,6 +80,7 @@ relation = (
     "constitution",
 )
 
+# Lista obrigatória do PLY que junta todos os tokens que o analisador deve ser capaz de reconhecer.
 tokens = [
     # Simbolos especial
     "L_BRACE",
@@ -101,6 +107,8 @@ tokens = [
     "NUMBER",
 ] + list(reserved.values())
 
+
+# Definição de regras simples usando expressões regulares diretas para símbolos especiais.
 t_L_BRACE = r"{"
 t_R_BRACE = r"}"
 t_L_PAREN = r"\("
@@ -117,21 +125,24 @@ t_AT = r"@"
 t_COLON = r":"
 t_MINUS_MINUS = r"--"
 
+
+# Regra para identificar instâncias: devem começar com letra e terminar com número.
 def t_ID_INSTANCE(t):
     r"[A-Za-z][A-Za-z_]*[0-9]+"
     return t
 
-
+# Regra para identificar tipos de dados: devem terminar com a string DataType.
 def t_ID_TYPE(t):
     r"[A-Za-z]+DataType"
     return t
 
-
+# Regra para identificar classes: começam obrigatoriamente com letra maiúscula.
 def t_ID_CLASS(t):
     r"[A-Z][A-Za-z_]*"
     return t
 
-
+# Regra para relações ou palavras reservadas: começam com letra minúscula.
+# Verifica se o texto capturado é uma relação (na lista relation) ou palavra reservada.
 def t_ID_RELATION(t):
     r"functional-complexes|[a-z][A-Za-z_]*"
 
@@ -142,12 +153,17 @@ def t_ID_RELATION(t):
 
     return t
 
+
+# Regra para capturar números inteiros e convertê-los de string para int.
 def t_NUMBER(t):
     r"[0-9]+"
     t.lexeme = t.value
     t.value = int(t.value)
     return t
 
+
+# Função chamada quando o analisador encontra um caractere que não bate com nenhuma regra.
+# Registra as informações do erro (linha, coluna, caractere) e pula para continuar a análise.
 def t_error(t):
     invalid_character = t.value[0]
 
@@ -165,16 +181,19 @@ def t_error(t):
     t.lexer.skip(1)
 
 
+# Atualiza o contador de linhas, tratando diferenças de quebra de linha.
 def t_newline(t):
     r"(?:\r\n|\r|\n)+"
     normalized_newlines = t.value.replace("\r\n", "\n").replace("\r", "\n")
     t.lexer.lineno += len(normalized_newlines)
 
 
+# Ignora espaços em branco, tabulações e comentários iniciados por //.
 t_ignore = " \t"
 t_ignore_COMMENT = r"//.*"
 
 
+# Calcula a coluna exata do token subtraindo a posição da última quebra de linha.
 def find_column(source, token):
     last_newline = max(
         source.rfind("\n", 0, token.lexpos),
@@ -183,9 +202,12 @@ def find_column(source, token):
     return token.lexpos - last_newline
 
 
+# Inicializa o analisador léxico do PLY.
 lexer = lex.lex()
 
 
+# Função principal que injeta o código-fonte no analisador, percorre todos os tokens
+# e retorna um dicionário contendo os tokens reconhecidos e a lista de erros capturados.
 def analyze(source):
     lexer.lineno = 1
     lexer.errors = []
@@ -211,5 +233,6 @@ def analyze(source):
     }
 
 
+# Atalho que chama a função analyze e retorna apenas a lista de tokens.
 def tokenize(source):
     return analyze(source)["tokens"]
