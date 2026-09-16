@@ -4,6 +4,9 @@ from compilador.lex import analyze, tokenize
 
 
 class TokenizePositionTests(unittest.TestCase):
+
+    # Testa se o analisador consegue ler um bloco básico de código e identificar
+    # corretamente os tipos de token, seus valores, linhas e colunas exatas.
     def test_tokenizes_basic_example_with_line_and_column(self):
         source = "kind Person {\n    name : string\n}"
 
@@ -24,6 +27,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    # Garante que, ao rodar a análise mais de uma vez em textos diferentes, o contador recomeça do 1.
     def test_resets_line_number_between_analyses(self):
         tokenize("kind Person {\n}\n")
 
@@ -39,6 +43,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    # Verifica se o analisador lida bem com formatos diversos de texto.
     def test_handles_empty_lines_tabs_and_different_line_endings(self):
         source = "kind Person {\r\r\tname : string\r}"
 
@@ -59,6 +64,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    # Testa se todos os símbolos especiais estão sendo capturados e classificados individualmente.
     def test_recognizes_simple_and_composite_symbols(self):
         source = "{ } ( ) [ ] .. <>-- --<> * @ :"
 
@@ -84,6 +90,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    # Confirma o requisito de que o símbolo '@' seja separado da relação
     def test_separates_at_sign_from_relation_stereotype(self):
         result = [
             (token.type, token.value, token.lineno, token.column)
@@ -97,6 +104,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    # Assegura que quebras de linha sejam contadas devidamente
     def test_counts_crlf_as_single_line_break(self):
         source = "kind Person {\r\n    name : string\r\n}"
 
@@ -117,6 +125,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    # Testa se o analisador não quebra ao achar caracteres inválidos.
     def test_collects_multiple_errors_and_continues_analysis(self):
         source = "kind Person $ {\n    ? name : string\n}"
 
@@ -147,10 +156,13 @@ class TokenizePositionTests(unittest.TestCase):
         self.assertEqual(token_types, expected_token_types)
         self.assertEqual(error_positions, expected_error_positions)
 
+        # Garante que os erros vêm com as sugestões de tratamento preenchidas.
         for error in analysis["errors"]:
             self.assertTrue(error["message"])
             self.assertTrue(error["suggestion"])
 
+
+    # Verifica se símbolos complexos colados uns nos outros sejam divididos.
     def test_recognizes_adjacent_composite_symbols(self):
         analysis = analyze("[1..*]<>----<>")
 
@@ -172,6 +184,7 @@ class TokenizePositionTests(unittest.TestCase):
         self.assertEqual(result, expected)
         self.assertEqual(analysis["errors"], [])
 
+    # Confirma se a lista de erros é limpa a cada nova análise.
     def test_clears_errors_between_analyses(self):
         first_analysis = analyze("$")
         second_analysis = analyze("kind")
@@ -179,6 +192,7 @@ class TokenizePositionTests(unittest.TestCase):
         self.assertEqual(len(first_analysis["errors"]), 1)
         self.assertEqual(second_analysis["errors"], [])
 
+    # Testa se o analisador mantém a imagem original do token.
     def test_preserves_original_lexeme(self):
         analysis = analyze("[03]")
 
@@ -194,6 +208,7 @@ class TokenizePositionTests(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    # Garante que linhas começadas com '//' sejam completamente ignoradas
     def test_ignore_comment(self):
         analysis = analyze("// comment package\ncomment // package\ncomment package //")
 
