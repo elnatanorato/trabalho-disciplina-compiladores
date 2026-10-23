@@ -1,9 +1,8 @@
 import ply.lex as lex
 
-
 # Dicionário contendo as palavras reservadas e estereótipos de classe da linguagem TONTO.
 # Mapeia o texto exato para o nome do token em maiúsculo.
-reserved = {                                        
+reserved = {
     # Estereotipos de classes
     "event": "EVENT",
     "situation": "SITUATION",
@@ -30,6 +29,8 @@ reserved = {
     "complete": "COMPLETE",
     "general": "GENERAL",
     "specfics": "SPECIFICS",
+    "specializes": "SPECIALIZES",
+    "relation": "RELATION",
     "where": "WHERE",
     "package": "PACKAGE",
     "import": "IMPORT",
@@ -42,6 +43,7 @@ reserved = {
     "time": "TIME_TYPE",
     "datetime": "DATETIME_TYPE",
     "datatype": "DATATYPE",
+    "enum": "ENUM",
     # Meta Atributos
     "ordered": "ORDERED_META",
     "const": "CONST_META",
@@ -102,7 +104,7 @@ tokens = [
     "ID_INSTANCE",
     "ID_TYPE",
     # Outros
-    "RELATION",
+    "AT_RELATION",
     "NUMBER",
 ] + list(reserved.values())
 
@@ -123,9 +125,10 @@ t_STAR = r"\*"
 t_COLON = r":"
 t_MINUS_MINUS = r"--"
 
+
 # Identifica estereótipos de relação: devem começar com '@' e conter
 # um nome presente na lista de relações válidas.
-def t_RELATION(t):
+def t_AT_RELATION(t):
     r"@[A-Za-z0-9_]*"
 
     relation_name = t.value[1:]
@@ -145,20 +148,24 @@ def t_RELATION(t):
 
     return None
 
+
 # Regra para identificar instâncias: devem começar com letra e terminar com número.
 def t_ID_INSTANCE(t):
     r"[A-Za-z][A-Za-z_]*[0-9]+"
     return t
+
 
 # Regra para identificar tipos de dados: devem terminar com a string DataType.
 def t_ID_TYPE(t):
     r"[A-Za-z]+DataType(?![A-Za-z0-9_])"
     return t
 
+
 # Regra para identificar classes: começam obrigatoriamente com letra maiúscula.
 def t_ID_CLASS(t):
     r"[A-Z][A-Za-z_]*"
     return t
+
 
 # Regra para relações ou palavras reservadas: começam com letra minúscula.
 # Verifica se o texto capturado é uma relação (na lista relation) ou palavra reservada.
