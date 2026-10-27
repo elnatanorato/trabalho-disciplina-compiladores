@@ -3,6 +3,21 @@
 ## Observação
  - O `empty` significar o vazio 
 
+## Primeiro token
+```
+start : list_instructions
+
+list_instructions : list_instructions instruction
+                  | instruction
+
+instruction : decl_class
+            | decl_type
+            | decl_enum
+            | package
+            | import
+            | decl_genset
+```
+
 ## Estereótipos de classes
 ```
 decl_class : decl_class1 ID_CLASS decl_class2
@@ -26,9 +41,13 @@ decl_class1 : EVENT
             | PHASE
             | ROLE
             | HISTORICAL_ROLE
+            | RELATOR
 
-decl_class2 : SPECIALIZES ID_CLASS
-            | L_BRACE list_attributes R_BRACE
+decl_class2 : SPECIALIZES ID_CLASS decl_class3
+            | decl_class3
+            
+
+decl_class3 : L_BRACE list_attributes R_BRACE
             | L_BRACE list_relations R_BRACE
             | L_BRACE list_attributes list_relations R_BRACE
             | empty
@@ -46,7 +65,7 @@ attribute1 : ID_RELATION COLON type
 attribute2 : cardinality 
            | empty
 
-attribute3 : meta 
+attribute3 : L_BRACE list_metas R_BRACE
            | empty
 
 cardinality : L_BRACKET cardinality1 R_BRACKET
@@ -57,9 +76,10 @@ cardinality1 : cardinality2
 cardinality2 : NUMBER
              | STAR
 
-meta : L_BRACE meta1 R_BRACE
+list_metas : list_metas COMMA meta
+           | meta
 
-meta1 : ORDERED_META
+meta : ORDERED_META
       | CONST_META
       | DERIVED_META
       | SUBSETS_META
@@ -71,7 +91,7 @@ meta1 : ORDERED_META
 list_relations : list_relations relation
                | relation
 
-relation : relation1 relation2 relation3 cardinality relation5 cardinality ID_CLASS
+relation : relation1 relation2 relation3 cardinality relation4 cardinality ID_CLASS
 
 relation1 : AT_RELATION
           | empty
@@ -91,7 +111,6 @@ relation5 : L_AGGREGATION
 ```
 
 ## Tipos
-
 ```
 type : NUMBER_TYPE
      | STRING_TYPE
@@ -106,10 +125,33 @@ decl_type : DATATYPE ID_TYPE decl_type1
 decl_type1 : L_BRACE list_attributes R_BRACE
            | empty
 
-decl_enum : ENUM ID_TYPE L_BRACE list_enum_itens COMMA enum_item R_BRACE
+decl_enum : ENUM ID_TYPE L_BRACE list_enum_itens COMMA ID_INSTANCE R_BRACE
 
-list_enum_itens : list_enum_itens COMMA enum_item
-                | enum_item
+list_enum_itens : list_enum_itens COMMA ID_INSTANCE
+                | ID_INSTANCE
+```
+
+## Package e import
+```
+package : PACKAGE ID_CLASS
+
+import : IMPORT PACKAGE
+```
 
 
+## Conjuntos
+```
+decl_genset : decl_genset1 decl_genset2 GENSET ID_CLASS decl_genset3
+
+decl_genset1 : DISJOINT
+             | empty
+
+decl_genset2 : COMPLETE
+             | empty
+
+decl_genset3 : WHERE list_id_class SPECIALIZES ID_CLASS
+             | L_BRACE GENERAL ID_CLASS SPECIFICS list_id_class R_BRACE
+
+list_id_class : list_id_class COMMA ID_CLASS
+              | ID_CLASS
 ```
