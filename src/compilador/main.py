@@ -1,6 +1,6 @@
 from compilador.lex import analyze, reserved
+from compilador.syntax import parse_code
 import sys
-
 
 # Agrupa os tokens que representam meta-atributos na linguagem TONTO.
 META_ATRIBUTOS = {
@@ -21,7 +21,6 @@ def gerar_relatorio(codigo_fonte):
     analysis = analyze(codigo_fonte)
     tokens = analysis["tokens"]
     erros = analysis["errors"]
-
 
     # Imprime um cabeçalho formatado para a tabela de tokens
     print("\n" + "=" * 70)
@@ -44,7 +43,6 @@ def gerar_relatorio(codigo_fonte):
         "Outros (Símbolos, Números, Tipos)": 0,
     }
 
-
     # Analisa o tipo de cada token e incrementa o contador da categoria correspondente
     for t in tokens:
         if t.type == "ID_CLASS":
@@ -60,7 +58,6 @@ def gerar_relatorio(codigo_fonte):
         else:
             contadores["Outros (Símbolos, Números, Tipos)"] += 1
 
-
     # Imprime a tabela com os totais calculados
     print("\n" + "=" * 70)
     print(" TABELA DE SÍNTESE ".center(70))
@@ -72,7 +69,6 @@ def gerar_relatorio(codigo_fonte):
     print("\n" + "=" * 70)
     print(" RELATÓRIO DE ERROS ".center(70))
     print("=" * 70)
-
 
     # Se a lista estiver vazia, exibe uma mensagem de sucesso
     if not erros:
@@ -107,7 +103,8 @@ def main():
         print(f"Problemas ao abrir arquivo {file}")
 
     # Aciona a função que fará a análise completa do texto lido
-    gerar_relatorio(codigo)
+    # gerar_relatorio(codigo)
+    parse_code(codigo)
 
 
 if __name__ == "__main__":
