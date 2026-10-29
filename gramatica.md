@@ -16,6 +16,7 @@ instruction : decl_class
             | package
             | import
             | decl_genset
+            | relation_out
 ```
 
 ## Estereótipos de classes
@@ -88,24 +89,20 @@ meta : ORDERED_META
 
 ## Relações
 ```
-list_relations : list_relations relation
-               | relation
+list_relations : list_relations relation_in
+               | relation_in
 
-relation : relation1 relation2 relation3 cardinality relation4 cardinality ID_CLASS
+relation_in : relation1 cardinality relation2 cardinality ID_CLASS
+
+relation_out : relation1 RELATION ID_CLASS cardinality relation2 cardinality ID_CLASS
 
 relation1 : AT_RELATION
           | empty
 
-relation2 : RELATION
-          | empty
+relation2 : relation3 ID_RELATION relation3
+          | relation3
 
-relation3 : ID_CLASS
-          | empty
-
-relation4 : relation5 ID_RELATION relation5
-          | relation5
-
-relation5 : L_AGGREGATION
+relation3 : L_AGGREGATION
           | R_AGGREGATION
           | MINUS_MINUS
 ```
@@ -118,14 +115,17 @@ type : NUMBER_TYPE
      | DATE_TYPE
      | TIME_TYPE
      | DATETIME_TYPE
-     | ID_TYPE
+     | ID_CLASS
 
-decl_type : DATATYPE ID_TYPE decl_type1
+decl_type : DATATYPE ID_CLASS decl_type1
 
-decl_type1 : L_BRACE list_attributes R_BRACE
+decl_type1 : SPECIALIZES type decl_type2
+           | decl_type2
+
+decl_type2 : L_BRACE list_attributes R_BRACE
            | empty
 
-decl_enum : ENUM ID_TYPE L_BRACE list_enum_itens COMMA ID_INSTANCE R_BRACE
+decl_enum : ENUM ID_CLASS L_BRACE list_enum_itens COMMA ID_INSTANCE R_BRACE
 
 list_enum_itens : list_enum_itens COMMA ID_INSTANCE
                 | ID_INSTANCE
@@ -135,7 +135,7 @@ list_enum_itens : list_enum_itens COMMA ID_INSTANCE
 ```
 package : PACKAGE ID_CLASS
 
-import : IMPORT PACKAGE
+import : IMPORT ID_CLASS
 ```
 
 

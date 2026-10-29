@@ -31,6 +31,7 @@ def p_instruction(p):
                 | package
                 | import
                 | decl_genset
+                | relation_out
     """
     p[0] = p[1]
 
@@ -189,8 +190,8 @@ def p_meta(p):
 
 def p_list_relations(p):
     """
-    list_relations : list_relations relation
-                   | relation
+    list_relations : list_relations relation_in
+                   | relation_in
     """
     if len(p) == 3:
         p[0] = ("R", p[1][1] + [p[2]])
@@ -198,11 +199,18 @@ def p_list_relations(p):
         p[0] = ("R", [p[1]])
 
 
-def p_relation(p):
+def p_relation_in(p):
     """
-    relation : relation1 relation2 relation3 cardinality relation4 cardinality ID_CLASS
+    relation_in : relation1 cardinality relation2 cardinality ID_CLASS
     """
-    p[0] = ast.Relation(p[1], p[2], p[3], p[4], p[5], p[6], p[7])
+    p[0] = ast.RelationIn(p[1], p[2], p[3], p[4], p[5])
+
+
+def p_relation_out(p):
+    """
+    relation_out : relation1 RELATION ID_CLASS cardinality relation2 cardinality ID_CLASS
+    """
+    p[0] = ast.RelationOut(p[1], p[3], p[4], p[5], p[6], p[7])
 
 
 def p_relation1(p):
@@ -216,24 +224,8 @@ def p_relation1(p):
 
 def p_relation2(p):
     """
-    relation2 : RELATION
-              | empty
-    """
-    p[0] = p[1] is not None
-
-
-def p_relation3(p):
-    """
-    relation3 : ID_CLASS
-              | empty
-    """
-    p[0] = p[1]
-
-
-def p_relation4(p):
-    """
-    relation4 : relation5 ID_RELATION relation5
-              | relation5
+    relation2 : relation3 ID_RELATION relation3
+              | relation3
     """
     if len(p) == 4:
         p[0] = ast.RelationType2(p[1], p[2], p[3])
@@ -241,9 +233,9 @@ def p_relation4(p):
         p[0] = ast.RelationType1(p[1])
 
 
-def p_relation5(p):
+def p_relation3(p):
     """
-    relation5 : L_AGGREGATION
+    relation3 : L_AGGREGATION
               | R_AGGREGATION
               | MINUS_MINUS
     """
@@ -258,21 +250,32 @@ def p_type(p):
          | DATE_TYPE
          | TIME_TYPE
          | DATETIME_TYPE
-         | ID_TYPE
+         | ID_CLASS
     """
     p[0] = p[1]
 
 
 def p_decl_type(p):
     """
-    decl_type : DATATYPE ID_TYPE decl_type1
+    decl_type : DATATYPE ID_CLASS decl_type1
     """
-    p[0] = ast.DeclType(p[2], p[3])
+    p[0] = ast.DeclType(p[2], p[3][0], p[3][1])
 
 
 def p_decl_type1(p):
     """
-    decl_type1 : L_BRACE list_attributes R_BRACE
+    decl_type1 : SPECIALIZES type decl_type2
+               | decl_type2
+    """
+    if len(p) == 4:
+        p[0] = (p[2], p[3])
+    else:
+        p[0] = (None, p[1])
+
+
+def p_decl_type2(p):
+    """
+    decl_type2 : L_BRACE list_attributes R_BRACE
                | empty
     """
     if len(p) == 4:
@@ -283,7 +286,7 @@ def p_decl_type1(p):
 
 def p_decl_enum(p):
     """
-    decl_enum : ENUM ID_TYPE L_BRACE list_enum_itens COMMA ID_INSTANCE R_BRACE
+    decl_enum : ENUM ID_CLASS L_BRACE list_enum_itens COMMA ID_INSTANCE R_BRACE
     """
     p[0] = ast.DeclEnum(p[2], p[4] + [p[6]])
 
@@ -308,7 +311,7 @@ def p_package(p):
 
 def p_import(p):
     """
-    import : IMPORT PACKAGE
+    import : IMPORT ID_CLASS
     """
     p[0] = ast.Import(p[2])
 

@@ -22,7 +22,7 @@ class DeclClass:
     name: str
     specializes: None | str
     attributes: List[Attribute]
-    relations: List[Relation]
+    relations: List[RelationIn]
 
 
 class Stereotype(StrEnum):
@@ -65,10 +65,18 @@ class Meta(StrEnum):
 
 
 @dataclass
-class Relation:
+class RelationIn:
     at: AtRelation | None
-    is_relation: bool
-    name1: str | None
+    cardinality1: Cardinality
+    type: RelationType1 | RelationType2
+    cardinality2: Cardinality
+    name: str
+
+
+@dataclass
+class RelationOut:
+    at: AtRelation | None
+    name1: str
     cardinality1: Cardinality
     type: RelationType1 | RelationType2
     cardinality2: Cardinality
@@ -130,6 +138,7 @@ class Cardinality:
 @dataclass
 class DeclType:
     name: str
+    specializes: str
     attributes: List[Attribute]
 
 
