@@ -97,7 +97,7 @@ class TokenizePositionTests(unittest.TestCase):
         ]
 
         expected = [
-            ("RELATION", "@material", 1, 1),
+            ("AT_RELATION", "@material", 1, 1),
         ]
 
         self.assertEqual(result, expected)
