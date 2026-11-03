@@ -5,6 +5,12 @@ import pprint
 
 
 class ListInstructions:
+    """
+    Uma lista com todas as instruções que são reconhecidas por esse compilador.
+    Ela receber a primeira instrução na inicialização e novas pode ser adicionando
+    somando uma instancia dessa classe com uma `Instruction`.
+    """
+
     def __init__(self, instruction: Instruction):
         self.instructions = [instruction]
 
@@ -18,6 +24,10 @@ class ListInstructions:
 
 @dataclass
 class DeclClass:
+    """
+    Instrução de declaração de classe.
+    """
+
     stereotype: Stereotype
     name: str
     specializes: None | str
@@ -26,6 +36,10 @@ class DeclClass:
 
 
 class Stereotype(StrEnum):
+    """
+    Enum de estereótipos de classes.
+    """
+
     EVENT = "event"
     SITUATION = "situation"
     PROCESS = "process"
@@ -50,6 +64,10 @@ class Stereotype(StrEnum):
 
 @dataclass
 class Attribute:
+    """
+    Parte de algumas instrução, representar um atributo com suas propriedades.
+    """
+
     name: str
     type: str
     cardinality: Cardinality
@@ -57,6 +75,10 @@ class Attribute:
 
 
 class Meta(StrEnum):
+    """
+    Enum de meta atributos
+    """
+
     ORDERED = "ordered"
     CONST = "const"
     DERIVED = "derived"
@@ -66,6 +88,10 @@ class Meta(StrEnum):
 
 @dataclass
 class RelationIn:
+    """
+    Parte de algumas instrução, representar um relação interna com suas propriedades.
+    """
+
     at: AtRelation | None
     cardinality1: Cardinality
     type: RelationType1 | RelationType2
@@ -75,6 +101,10 @@ class RelationIn:
 
 @dataclass
 class RelationOut:
+    """
+    Instrução de declaração de relação, como uma relação externa não faz parte de outras instruções.
+    """
+
     at: AtRelation | None
     name1: str
     cardinality1: Cardinality
@@ -84,6 +114,10 @@ class RelationOut:
 
 
 class AtRelation(StrEnum):
+    """
+    Enum de estereótipos de relação.
+    """
+
     MATERIAL = "@material"
     DERIVATION = "@derivation"
     COMPARATIVE = "@comparative"
@@ -113,17 +147,29 @@ class AtRelation(StrEnum):
 
 @dataclass
 class RelationType1:
+    """
+    Parte de uma instrução, representar uma relação com apenas um único operador.
+    """
+
     operator: RelationOperator
 
 
 @dataclass
 class RelationType2:
+    """
+    Parte de uma instrução, representar uma relação com apenas dois operadores e um nome.
+    """
+
     operator1: RelationOperator
     name: str
     operator2: RelationOperator
 
 
 class RelationOperator(StrEnum):
+    """
+    Enum de operador de relação
+    """
+
     L_AGGREGATION = "<>--"
     R_AGGREGATION = "--<>"
     MINUS_MINUS = "--"
@@ -131,12 +177,20 @@ class RelationOperator(StrEnum):
 
 @dataclass
 class Cardinality:
+    """
+    Parte de uma instrução, representar a cardinalidade com o `end` sendo opcional para que as duas formas possam ser representadas.
+    """
+
     start: int | Literal["*"]
     end: int | Literal["*"] | None
 
 
 @dataclass
 class DeclType:
+    """
+    Instrução de declaração de tipo.
+    """
+
     name: str
     specializes: str
     attributes: List[Attribute]
@@ -144,22 +198,38 @@ class DeclType:
 
 @dataclass
 class DeclEnum:
+    """
+    Instrução de declaração de enum.
+    """
+
     name: str
     variances: List[str]
 
 
 @dataclass
 class Package:
+    """
+    Instrução de declaração de pacote.
+    """
+
     name: str
 
 
 @dataclass
 class Import:
+    """
+    Instrução de importação de pacote.
+    """
+
     name: str
 
 
 @dataclass
 class DeclGenset:
+    """
+    Instrução de declaração de conjunto.
+    """
+
     is_disjoint: bool
     is_complete: bool
     name: str
@@ -167,4 +237,5 @@ class DeclGenset:
     specifics: List[str]
 
 
+# Tipo que agrupar todas as instrução em um único nome
 Instruction = DeclClass | DeclType | DeclEnum | Package | Import | DeclGenset
