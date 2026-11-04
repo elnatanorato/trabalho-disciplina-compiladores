@@ -89,15 +89,10 @@ def _select_files(paths, table):
 
 
 def _parse_source(source):
-    from compilador.lex import lexer as base_lexer
-    from compilador.syntax import parser
+    from compilador.syntax import parse_code
 
-    # Cada arquivo recebe seu próprio estado léxico; o parser existente é reutilizado.
-    lexer = base_lexer.clone()
-    lexer.lineno = 1
-    lexer.errors = []
-    tree = parser.parse(source, lexer=lexer)
-    return tree, list(lexer.errors)
+    result = parse_code(source)
+    return result.tree, result.diagnostics
 
 
 def load_project(paths):
@@ -118,15 +113,17 @@ def load_project(paths):
             )
             continue
 
-        tree, lexical_errors = _parse_source(source)
-        for error in lexical_errors:
+        tree, diagnostics = _parse_source(source)
+        for error in diagnostics:
             project.table.add_diagnostic(
-                "lexical_error", error["message"], error["suggestion"],
+                error["code"], error["message"], error["suggestion"],
                 file=filename, line=error.get("line"), column=error.get("column"),
-                stage="lexical",
+                stage=error["stage"],
             )
         project.asts[filename] = tree
         if tree is None:
+            if any(error["stage"] == "syntax" for error in diagnostics):
+                continue
             project.table.add_diagnostic(
                 "ast_unavailable", "O parser não produziu uma AST para este arquivo.",
                 "Verifique os erros sintáticos apresentados pelo parser.",

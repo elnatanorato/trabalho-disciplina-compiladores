@@ -1,42 +1,66 @@
-# Analisador Léxico para TONTO (Textual Ontology Language)
+# Analisador sintático para TONTO
 
-Projeto desenvolvido como requisito de avaliação para a disciplina de Compiladores.
-
-O objetivo deste software é realizar a análise léxica de arquivos contendo ontologias especificadas na linguagem TONTO, identificando seus componentes, validando a corretude dos caracteres e gerando relatórios de síntese.
-
-## Funcionalidades
-
-- Leitura de código-fonte a partir de arquivos `.tonto`.
-- Classificação de tokens de acordo com as especificações da linguagem (estereótipos de classes, relações, meta-atributos, tipos de dados e palavras reservadas).
-- Visão analítica dos tokens, detalhando linha, coluna, lexema e classificação de cada elemento encontrado.
-- Geração de tabela de síntese com o quantitativo de instâncias, classes, relações e palavras-chave.
-- Sistema de tratamento de erros léxicos que identifica a localização exata de caracteres inválidos e fornece sugestões de correção, permitindo que a análise prossiga sem interrupções bruscas.
-
-## Tecnologias e Pré-requisitos
-
-- Python
-- Biblioteca PLY (Python Lex-Yacc) para a construção do analisador léxico.
-- Gerenciador de dependências [Poetry](https://python-poetry.org/).
+Projeto da disciplina de Compiladores, continuação do analisador léxico.
+Reconhece declarações da linguagem TONTO, constrói uma AST, registra símbolos,
+resolve referências entre pacotes e apresenta síntese e relatório de erros.
 
 ## Instalação
 
-Clone este repositório em sua máquina local. Na raiz do projeto, execute o comando abaixo para instalar as dependências necessárias através do Poetry:
+Requisitos: Python 3.14 ou superior e [Poetry](https://python-poetry.org/).
 
 ```bash
 poetry install
 ```
-## Para Executar
 
-Para realizar a análise léxica de um arquivo, utilize o comando abaixo informando o caminho do arquivo .tonto como argumento:
+## Execução
 
 ```bash
-poetry run compilador {input.tonto}
+# Um arquivo
+poetry run compilador exemplo.tonto
+
+# Vários arquivos, incluindo os pacotes importados
+poetry run compilador Pessoas.tonto Bens.tonto
+
+# Todos os arquivos .tonto diretamente nesta pasta (sem recursão)
+poetry run compilador exemplos/integracao
+
+# Demonstração de erros e recuperação (retorna código 1)
+poetry run compilador exemplos/erros_sintaticos.tonto
 ```
 
-## Execução dos Testes
+Alternativa: `poetry run python -m compilador.main exemplos/integracao`.
+Importações são resolvidas pelos nomes declarados nos pacotes, não pelo nome
+dos arquivos. Os arquivos importados precisam fazer parte da entrada; informar
+um arquivo isolado não procura automaticamente suas dependências no disco.
 
-Para executar a suíte de testes rode:
+**Saídas:** tabela de quantidades e detalhes por pacote (classes, atributos,
+relações internas e externas, tipos complexos, enumerações e generalizações),
+seguida dos erros com arquivo, localização disponível e sugestão de tratamento.
+Havendo erros, a síntese é marcada como potencialmente incompleta.
+
+Códigos de saída: `0` para análise sem diagnósticos; `1` para erros da análise
+ou dos arquivos; `2` para uso incorreto da linha de comando.
+
+## Testes
 
 ```bash
+poetry run python -m unittest discover -s tests
+# Ou, após instalar os scripts:
 poetry run test
 ```
+
+## Estrutura e documentação
+
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `src/compilador/lex.py` | Tokens, erros léxicos e localização |
+| `src/compilador/syntax.py` | Parser PLY, construção da AST e recuperação |
+| `src/compilador/ast.py` | Nós da árvore sintática |
+| `src/compilador/symbols.py` | Tabela de símbolos, escopos e resolução |
+| `src/compilador/packages.py` | Seleção e leitura de arquivos, registro em duas etapas |
+| `src/compilador/reports.py` | Síntese e apresentação unificada de diagnósticos |
+| `src/compilador/main.py` | Interface de linha de comando |
+
+- [Gramática de referência](gramatica.md).
+- [Documentação das mudanças de erros, relatórios e integração](docs/erros-relatorios-integracao.md): contratos, recuperação, tabela de dispersão, testes e limitações.
+
