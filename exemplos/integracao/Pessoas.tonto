@@ -1,0 +1,28 @@
+package Pessoas
+import Bens
+
+datatype Endereco {
+    rua : string
+    numero : number
+}
+
+enum Situacao { Ativo1, Inativo2 }
+
+kind Pessoa {
+    nome : string
+    ativo : boolean
+    nascimento : date
+    horario : time
+    atualizado : datetime
+    endereco : Endereco
+    situacao : Situacao
+    @material [1] -- possui -- [0..*] Carro
+}
+
+role Estudante specializes Pessoa
+role Professor specializes Pessoa
+
+genset Papeis {
+    general Pessoa
+    specifics Estudante, Professor
+}

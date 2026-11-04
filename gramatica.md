@@ -1,7 +1,11 @@
 # Documento para ajudar a desenvolver a gramatica
 
 ## Observação
- - O `empty` significar o vazio 
+  - `empty` representa uma produção vazia.
+  - As produções abaixo refletem as correções de integração; regras de recuperação
+    com `error` estão detalhadas em `docs/erros-relatorios-integracao.md`.
+  - `RELATION_L_BRACKET` é uma classificação contextual de `[` feita somente
+    pelo adaptador do parser quando a cardinalidade é seguida por operador.
 
 ## Primeiro token
 ```
@@ -49,6 +53,7 @@ decl_class2 : SPECIALIZES ID_CLASS decl_class3
             
 
 decl_class3 : L_BRACE list_attributes R_BRACE
+            | L_BRACE R_BRACE
             | L_BRACE list_relations R_BRACE
             | L_BRACE list_attributes list_relations R_BRACE
             | empty
@@ -92,9 +97,11 @@ meta : ORDERED_META
 list_relations : list_relations relation_in
                | relation_in
 
-relation_in : relation1 cardinality relation2 cardinality ID_CLASS
+relation_in : relation1 relation_cardinality relation2 cardinality ID_CLASS
 
-relation_out : relation1 RELATION ID_CLASS cardinality relation2 cardinality ID_CLASS
+relation_out : relation1 RELATION ID_CLASS relation_cardinality relation2 cardinality ID_CLASS
+
+relation_cardinality : RELATION_L_BRACKET cardinality1 R_BRACKET
 
 relation1 : AT_RELATION
           | empty
@@ -116,16 +123,21 @@ type : NUMBER_TYPE
      | TIME_TYPE
      | DATETIME_TYPE
      | ID_CLASS
+     | ID_TYPE
 
-decl_type : DATATYPE ID_CLASS decl_type1
+decl_type : DATATYPE type_name decl_type1
+
+type_name : ID_CLASS
+          | ID_TYPE
 
 decl_type1 : SPECIALIZES type decl_type2
            | decl_type2
 
 decl_type2 : L_BRACE list_attributes R_BRACE
+           | L_BRACE R_BRACE
            | empty
 
-decl_enum : ENUM ID_CLASS L_BRACE list_enum_itens COMMA ID_INSTANCE R_BRACE
+decl_enum : ENUM ID_CLASS L_BRACE list_enum_itens R_BRACE
 
 list_enum_itens : list_enum_itens COMMA ID_INSTANCE
                 | ID_INSTANCE

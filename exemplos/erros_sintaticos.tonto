@@ -1,0 +1,19 @@
+package Demonstracao
+
+kind Pessoa {
+    nome string
+    idade : number
+    ativo boolean
+    nascimento : date
+}
+
+// Recuperação na próxima declaração: falta '}' para fechar Carro.
+kind Carro {
+    modelo : string
+
+kind Empresa
+
+// Referência não resolvida, com localização do atributo na AST.
+kind Documento {
+    proprietario : Desconhecido
+}

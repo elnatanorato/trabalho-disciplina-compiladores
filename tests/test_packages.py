@@ -131,7 +131,7 @@ class PackageTests(ProjectFilesTestCase):
         self.assertIsNone(project.imports['A'][0].target)
         diagnostic, = project.diagnostics
         self.assertEqual(diagnostic['file'], str(path.resolve()))
-        self.assertEqual((diagnostic['line'], diagnostic['column']), (None, None))
+        self.assertEqual((diagnostic['line'], diagnostic['column']), (2, 8))
         self.assertIn('Missing', diagnostic['message'])
         self.assertTrue(diagnostic['suggestion'])
 
@@ -273,7 +273,7 @@ class PackageTests(ProjectFilesTestCase):
     def test_unavailable_ast_has_diagnostic_instead_of_success(self):
         path = self.source('invalid.tonto', 'kind')
         project = load_project(path)
-        self.assert_codes(project, ['ast_unavailable'])
+        self.assert_codes(project, ['unexpected_eof'])
         self.assertEqual(project.asts, {str(path.resolve()): None})
         self.assertEqual(project.symbols, {})
 
@@ -320,13 +320,14 @@ relation Person [1] -- [1] Car
         self.assertEqual(self.reference(project, 'School', external.name, 'target').target.name, 'Car')
         genset, = project.table.lookup('Roles', 'School', category='genset')
         self.assertTrue(genset.node.is_disjoint and genset.node.is_complete)
-        self.assertTrue(all(s.line is None and s.column is None for s in project.symbols.values()))
+        positioned = [s for s in project.symbols.values() if s.category != 'enum_value']
+        self.assertTrue(all(s.line is not None and s.column is not None for s in positioned))
         self.assertTrue(all(r.target is not None or r.basic_type is not None for r in project.references))
 
 
 class ParserRegressionTests(ProjectFilesTestCase):
     def test_relation_after_attribute_without_cardinality_is_preserved(self):
-        # Forma prevista nas produções; a falha deve continuar visível até corrigir o parser.
+        # Regressão: a cardinalidade inicial da relação não pertence ao atributo.
         code = '''package School
 kind Car
 kind Person {

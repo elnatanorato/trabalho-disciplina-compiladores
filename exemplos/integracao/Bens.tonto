@@ -1,0 +1,6 @@
+package Bens
+import Pessoas
+
+kind Carro
+
+@material relation Carro [0..*] -- pertence -- [1] Pessoa

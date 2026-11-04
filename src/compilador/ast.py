@@ -238,4 +238,4 @@ class DeclGenset:
 
 
 # Tipo que agrupar todas as instrução em um único nome
-Instruction = DeclClass | DeclType | DeclEnum | Package | Import | DeclGenset
+Instruction = DeclClass | DeclType | DeclEnum | Package | Import | DeclGenset | RelationOut
