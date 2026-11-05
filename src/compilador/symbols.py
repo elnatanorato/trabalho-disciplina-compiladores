@@ -5,11 +5,15 @@ from dataclasses import dataclass
 from compilador import ast
 
 
+# Tipos nativos que podem ser usados sem uma declaração própria na ontologia.
 BASIC_TYPES = frozenset({"number", "string", "boolean", "date", "time", "datetime"})
+# Classes, tipos compostos e enums compartilham o espaço de nomes dos tipos.
 TYPE_CATEGORIES = frozenset({"class", "datatype", "enum"})
+# Escopo utilizado para arquivos sem declaração explícita de pacote.
 DEFAULT_PACKAGE = "<default>"
 
 
+# Guarda os dados de uma declaração e sua associação com o nó original da AST.
 @dataclass
 class Symbol:
     name: str
@@ -22,11 +26,13 @@ class Symbol:
     column: int | None = None
     anonymous: bool = False
 
+    # Identifica o símbolo na tabela pelo pacote, proprietário, categoria e nome.
     @property
     def key(self):
         return (self.package, self.owner, self.category, self.name)
 
 
+# Representa um nome utilizado no código e guarda seu destino após a resolução.
 @dataclass
 class Reference:
     name: str
@@ -42,6 +48,7 @@ class Reference:
     basic_type: str | None = None
 
 
+# Obtém linha e coluna quando disponíveis no nó; caso contrário, mantém None.
 def _position(node):
     line = getattr(node, "line", None)
     if line is None:
@@ -49,6 +56,7 @@ def _position(node):
     return line, getattr(node, "column", None)
 
 
+# Define quais categorias devem ser comparadas para detectar nomes duplicados.
 def _namespace(category, owner):
     # A categoria na chave não pode esconder conflitos no mesmo espaço de nomes.
     if category in TYPE_CATEGORIES:
@@ -60,6 +68,7 @@ def _namespace(category, owner):
     return category
 
 
+# Organiza as declarações em dicts do Python, que funcionam como tabelas de dispersão.
 class SymbolTable:
     def __init__(self):
         self.symbols: dict[tuple, Symbol] = {}
@@ -67,9 +76,11 @@ class SymbolTable:
         self.imports: dict[str, list[Reference]] = {}
         self.references: list[Reference] = []
         self.diagnostics: list[dict] = []
+        # Índice auxiliar para consultar um nome dentro do pacote e do proprietário.
         self._by_name: dict[tuple, list[Symbol]] = {}
         self._anonymous_relations = 0
 
+    # Armazena o problema e a sugestão de correção, sem apresentar o relatório na tela.
     def add_diagnostic(
         self, code, message, suggestion, *, file=None, node=None,
         line=None, column=None, stage="symbols"
@@ -85,6 +96,7 @@ class SymbolTable:
             "suggestion": suggestion,
         })
 
+    # Verifica duplicidades no escopo antes de inserir o símbolo e atualizar os índices.
     def add_symbol(
         self, name, category, package, node=None, file=None, owner=None,
         anonymous=False
@@ -114,22 +126,26 @@ class SymbolTable:
             self.imports[name] = []
         return symbol
 
+    # Consulta um nome no escopo informado, com filtro opcional por categoria.
     def lookup(self, name, package, owner=None, category=None):
         matches = self._by_name.get((package, owner, name), [])
         return [s for s in matches if category is None or s.category == category]
 
+    # Lista os símbolos de um pacote para consultas e geração da síntese.
     def symbols_in_package(self, package, category=None):
         return [
             s for s in self.symbols.values()
             if s.package == package and (category is None or s.category == category)
         ]
 
+    # Lista os membros que pertencem a uma classe, tipo ou enum do pacote.
     def members(self, package, owner, category=None):
         return [
             s for s in self.symbols_in_package(package, category)
             if s.owner == owner
         ]
 
+    # Filtra relações internas e externas; as externas não possuem proprietário.
     def relations(self, package=None, external=None):
         return [
             s for s in self.symbols.values()
@@ -138,6 +154,7 @@ class SymbolTable:
             and (external is None or (s.owner is None) == external)
         ]
 
+    # Guarda uma referência pendente e identifica as que representam importações.
     def add_reference(
         self, source, name, field, expected_categories, *, node=None,
         file=None, allow_basic=False
@@ -154,6 +171,7 @@ class SymbolTable:
             self.imports.setdefault(source.package, []).append(reference)
         return reference
 
+    # Percorre as instruções da AST e registra as declarações no pacote correspondente.
     def register_ast(self, tree, file=None):
         instructions = tree.instructions if isinstance(tree, ast.ListInstructions) else list(tree)
         declarations = [n for n in instructions if isinstance(n, ast.Package)]
@@ -202,6 +220,7 @@ class SymbolTable:
                         {"class"} if category == "class" else TYPE_CATEGORIES,
                         allow_basic=category == "datatype",
                     )
+                # Registra os atributos no escopo da classe ou tipo que os declara.
                 for attribute in node.attributes:
                     member = self.add_symbol(
                         attribute.name, "attribute", package_name, attribute,
@@ -215,6 +234,7 @@ class SymbolTable:
                 if isinstance(node, ast.DeclClass):
                     for relation in node.relations:
                         self._register_relation(relation, package_name, file, node.name)
+            # Mantém os valores enumerados associados ao enum de origem.
             elif isinstance(node, ast.DeclEnum):
                 symbol = self.add_symbol(node.name, "enum", package_name, node, file)
                 if symbol is not None:
@@ -225,6 +245,7 @@ class SymbolTable:
                         )
             elif isinstance(node, ast.RelationOut):
                 self._register_relation(node, package_name, file)
+            # Registra o conjunto e as referências à classe geral e às específicas.
             elif isinstance(node, ast.DeclGenset):
                 symbol = self.add_symbol(node.name, "genset", package_name, node, file)
                 if symbol is not None:
@@ -233,8 +254,10 @@ class SymbolTable:
                         self.add_reference(symbol, name, f"specifics[{index}]", {"class"})
         return package
 
+    # Registra a relação e as referências às classes envolvidas.
     def _register_relation(self, node, package, file, owner=None):
         anonymous = isinstance(node.type, ast.RelationType1)
+        # Relações sem nome recebem um identificador interno para não serem perdidas.
         if anonymous:
             self._anonymous_relations += 1
             name = f"<relation:{self._anonymous_relations}>"
@@ -252,6 +275,7 @@ class SymbolTable:
             # RelationIn.name é o destino; o nome da relação pertence a node.type.
             self.add_reference(symbol, node.name, "target", {"class"})
 
+    # Resolve os imports e depois as demais referências, com as declarações já registradas.
     def resolve(self):
         # Permite repetir a resolução depois de registrar novos arquivos.
         self.diagnostics[:] = [d for d in self.diagnostics if d["stage"] != "resolution"]
@@ -259,6 +283,7 @@ class SymbolTable:
             reference.target = None
             reference.basic_type = None
 
+        # Localiza os pacotes pelo nome declarado, independentemente do nome do arquivo.
         for imports in self.imports.values():
             for reference in imports:
                 reference.target = self.packages.get(reference.name)
@@ -274,6 +299,7 @@ class SymbolTable:
                 self._resolve_reference(reference)
         return self
 
+    # Prioriza os tipos nativos permitidos, o pacote atual e os imports diretos.
     def _resolve_reference(self, reference):
         if reference.allow_basic and reference.name in BASIC_TYPES:
             reference.basic_type = reference.name
@@ -294,6 +320,7 @@ class SymbolTable:
         if not candidates:
             candidates = local or imported
 
+        # Só associa um destino quando existe uma única declaração da categoria esperada.
         compatible = [s for s in candidates if s.category in reference.expected_categories]
         if len(compatible) == 1:
             reference.target = compatible[0]
@@ -319,6 +346,7 @@ class SymbolTable:
                 "Declare o nome, corrija sua grafia ou importe o pacote que o declara.",
             )
 
+    # Acrescenta o diagnóstico usando o arquivo e a localização disponíveis na referência.
     def _reference_error(self, reference, code, message, suggestion):
         self.add_diagnostic(
             code, message, suggestion, file=reference.file,

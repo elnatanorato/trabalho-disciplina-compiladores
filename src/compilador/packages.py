@@ -7,11 +7,13 @@ from compilador import ast
 from compilador.symbols import SymbolTable
 
 
+# Reúne a tabela de símbolos e as ASTs dos arquivos analisados.
 @dataclass
 class Project:
     table: SymbolTable = field(default_factory=SymbolTable)
     asts: dict[str, ast.ListInstructions | None] = field(default_factory=dict)
 
+    # Disponibiliza os dados da tabela para a integração e os relatórios.
     @property
     def packages(self):
         return self.table.packages
@@ -33,6 +35,7 @@ class Project:
         return self.table.diagnostics
 
 
+# Seleciona os arquivos .tonto, aceitando também pastas sem percorrer subpastas.
 def _select_files(paths, table):
     if isinstance(paths, (str, Path)):
         paths = [paths]
@@ -74,6 +77,7 @@ def _select_files(paths, table):
                     file=str(candidate), stage="packages",
                 )
                 continue
+            # Impede que o mesmo arquivo seja analisado novamente por caminhos repetidos.
             if candidate in seen:
                 continue
             seen.add(candidate)
@@ -88,6 +92,7 @@ def _select_files(paths, table):
     return selected
 
 
+# Usa o analisador existente para obter a AST e os diagnósticos léxicos e sintáticos.
 def _parse_source(source):
     from compilador.syntax import parse_code
 
@@ -95,6 +100,7 @@ def _parse_source(source):
     return result.tree, result.diagnostics
 
 
+# Coordena a leitura, o registro dos símbolos e a resolução entre os pacotes.
 def load_project(paths):
     project = Project()
     files = _select_files(paths, project.table)
@@ -113,6 +119,7 @@ def load_project(paths):
             )
             continue
 
+        # Associa os diagnósticos léxicos e sintáticos ao arquivo de origem para o relatório.
         tree, diagnostics = _parse_source(source)
         for error in diagnostics:
             project.table.add_diagnostic(
@@ -120,6 +127,7 @@ def load_project(paths):
                 file=filename, line=error.get("line"), column=error.get("column"),
                 stage=error["stage"],
             )
+        # Preserva a árvore recebida e registra somente quando o parser produz uma AST.
         project.asts[filename] = tree
         if tree is None:
             if any(error["stage"] == "syntax" for error in diagnostics):
