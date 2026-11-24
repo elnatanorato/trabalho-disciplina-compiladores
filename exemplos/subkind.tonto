@@ -1,0 +1,20 @@
+kind Carro
+
+subkind Pequeno specializes Carro
+subkind Grande specializes Carro
+subkind Medio
+
+disjoint complete genset Kind_Carro {
+    general Carro
+    specifics Pequeno,Grande
+}
+
+kind Animal
+
+subkind Manifero
+subkind Ave
+
+genset Kind_Animal {
+    general Animal
+    specifics Manifero,Ave
+}
