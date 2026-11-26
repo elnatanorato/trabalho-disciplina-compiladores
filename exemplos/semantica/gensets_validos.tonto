@@ -1,0 +1,27 @@
+package GensetsValidos
+
+kind Pessoa
+phase Crianca specializes Pessoa
+phase Adulto specializes Pessoa
+
+disjoint genset Fases {
+    general Pessoa
+    specifics Crianca, Adulto
+}
+
+kind Veiculo
+subkind Carro specializes Veiculo
+subkind Moto specializes Veiculo
+
+disjoint complete genset Veiculos {
+    general Veiculo
+    specifics Carro, Moto
+}
+
+role Aluno specializes Pessoa
+role Professor specializes Pessoa
+
+genset Papeis {
+    general Pessoa
+    specifics Aluno, Professor
+}

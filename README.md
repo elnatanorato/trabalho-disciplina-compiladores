@@ -49,6 +49,29 @@ poetry run python -m unittest discover -s tests
 poetry run test
 ```
 
+## Etapa semântica — implementação parcial
+
+A camada de tratamento de erros já oferece diagnósticos semânticos, interface
+para os reconhecedores dos colegas e coerção explícita dos marcadores de
+gensets. **O reconhecimento completo dos seis padrões ainda não está conectado.**
+
+```bash
+# Diagnóstico dos marcadores (exemplo com três erros; retorna 1)
+poetry run compilador --semantic exemplos/semantica/gensets_com_erros.tonto
+
+# Coerção e revalidação de uma cópia em memória (não modifica os arquivos)
+poetry run compilador --semantic --coerce exemplos/semantica/gensets_com_erros.tonto
+
+# Exemplo sem divergências nos marcadores locais
+poetry run compilador --semantic exemplos/semantica/gensets_validos.tonto
+```
+
+Somente `disjoint` pode ser ajustado, em contextos restritos e conforme os
+exemplos do PDF. Classes e relações ausentes não são inventadas. Código 0 nesse
+modo significa ausência de erros pendentes **nas verificações executadas**,
+não certificação dos seis ODPs; com coerção, refere-se à cópia analisada.
+Sem as opções novas, a execução anterior permanece igual.
+
 ## Estrutura e documentação
 
 | Arquivo | Responsabilidade |
@@ -59,8 +82,9 @@ poetry run test
 | `src/compilador/symbols.py` | Tabela de símbolos, escopos e resolução |
 | `src/compilador/packages.py` | Seleção e leitura de arquivos, registro em duas etapas |
 | `src/compilador/reports.py` | Síntese e apresentação unificada de diagnósticos |
+| `src/compilador/semantic_errors.py` | Tratamento semântico, contrato dos reconhecedores e coerções limitadas |
 | `src/compilador/main.py` | Interface de linha de comando |
 
 - [Gramática de referência](gramatica.md).
 - [Documentação das mudanças de erros, relatórios e integração](docs/erros-relatorios-integracao.md): contratos, recuperação, tabela de dispersão, testes e limitações.
-
+- [Erros semânticos e coerção](docs/erros-semanticos-coercao.md): mudanças desta etapa, exemplos, interpretações e integração pendente com os reconhecedores.
