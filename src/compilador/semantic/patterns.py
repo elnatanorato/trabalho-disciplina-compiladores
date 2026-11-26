@@ -40,7 +40,7 @@ def subkind_role_phase_pattern(project: Project):
                 print(f"{node.name} o disjoint é obrigatorio nesse caso")
 
             if stereotype == ast.Stereotype.ROLE and node.is_disjoint:
-                print(f"f{node.name} o disjoint não é permitido nesse caso")
+                print(f"{node.name} o disjoint não é permitido nesse caso")
 
             if stereotype == ast.Stereotype.PHASE and len(specifics_node) <= 1:
                 print(f"{node.name} quando é phase é necessario ter pelo menos 2")
@@ -67,8 +67,14 @@ def subkind_role_phase_pattern(project: Project):
 
             specializes_node = cast(ast.DeclClass, specializes.node)
 
-            if specializes_node.stereotype != ast.Stereotype.KIND:
-                print(f"{node.name} deve especializar um kind")
+            if node.name == specializes_node.name:
+                print(f"{node.name} não pode ser auto especializar")
+
+            if (
+                specializes_node.stereotype != ast.Stereotype.KIND
+                and specializes_node.stereotype != ast.Stereotype.SUBKIND
+            ):
+                print(f"{node.name} deve especializar um kind ou subkind")
                 continue
 
             if (
