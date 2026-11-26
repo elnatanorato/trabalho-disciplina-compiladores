@@ -51,9 +51,7 @@ poetry run test
 
 ## Etapa semântica — implementação parcial
 
-A camada de tratamento de erros já oferece diagnósticos semânticos, interface
-para os reconhecedores dos colegas e coerção explícita dos marcadores de
-gensets. **O reconhecimento completo dos seis padrões ainda não está conectado.**
+A camada de tratamento de erros já oferece diagnósticos semânticos, **O reconhecimento completo dos seis padrões ainda não está conectado.**
 
 ```bash
 # Diagnóstico dos marcadores (exemplo com três erros; retorna 1)
